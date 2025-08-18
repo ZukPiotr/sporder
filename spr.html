@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SPORDER — wspólne treningi</title>
+  <meta name="description" content="SPORDER — umawiaj się na wspólne treningi sportowe. Szybkie zapisy, filtry, poziomy zaawansowania i znajomi."/>
+  <style>
+    :root{
+      --bg:#0a0f1a;
+      --panel:#0f1726;
+      --card:#121b2e;
+      --muted:#c8d6ef;       /* jaśniejszy opis dla lepszej czytelności */
+      --text:#f5fbff;
+      --accent:#2e8bff;
+      --accent-2:#5ad1ff;
+      --ok:#19d47b;
+      --warn:#ffd166;
+      --danger:#ff5a7a;
+      --shadow:0 10px 30px rgba(20,40,80,.35);
+      --radius:18px;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(46,139,255,.15), transparent 60%),
+                  radial-gradient(900px 600px at -10% 20%, rgba(90,209,255,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit;text-decoration:none}
+    button{font:inherit;cursor:pointer}
+
+    /* Layout */
+    .app{display:grid; grid-template-rows: auto 1fr auto; min-height:100dvh}
+    header{
+      position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(10px);
+      background:linear-gradient(180deg, rgba(10,15,26,.85), rgba(10,15,26,.6)); border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{display:flex; align-items:center; gap:14px; padding:14px clamp(14px, 3vw, 28px)}
+    .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.5px}
+    .logo{width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, var(--accent), var(--accent-2)); display:grid; place-items:center; box-shadow:var(--shadow)}
+    .brand span{font-size:1.25rem}
+
+    nav{margin-left:auto; display:flex; gap:6px; flex-wrap:wrap}
+    .nav-btn{border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text);
+      padding:10px 14px; border-radius:12px; transition:.2s; display:flex; align-items:center; gap:10px}
+    .nav-btn[aria-current="page"], .nav-btn:hover{background:linear-gradient(180deg, rgba(46,139,255,.22), rgba(255,255,255,.05)); border-color:rgba(46,139,255,.55)}
+
+    .wrap{display:grid; grid-template-columns: 280px 1fr; gap:18px; padding:18px clamp(14px, 3vw, 28px)}
+    @media (max-width: 980px){ .wrap{grid-template-columns: 1fr} }
+
+    /* Sidebar */
+    .side{background:linear-gradient(180deg, rgba(18,27,46,.8), rgba(18,27,46,.5)); border:1px solid rgba(255,255,255,.12); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+    .side h3{margin:6px 0 12px; font-size:.95rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.1em}
+    .chipset{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{padding:8px 12px; border-radius:999px; border:1px solid rgba(46,139,255,.8); background:rgba(46,139,255,.8); font-size:.9rem}
+    .chip.active{border-color:rgba(46,139,255,.7); background:rgba(237,228,228)}
+    .field{display:grid; gap:8px; margin:12px 0}
+    .label{font-size:.9rem; color:#e9f1ff}
+    input, select{background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.2); color:var(--text); border-radius:12px; padding:10px 12px}
+    input::placeholder{color:#d1def5}
+    input:focus, select:focus{outline:none; border-color:rgba(46,139,255,.8); box-shadow:0 0 0 3px rgba(46,139,255,.24)}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.2); background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); color:var(--text); transition:.2s; box-shadow:var(--shadow)}
+    .btn:hover{transform:translateY(-1px); border-color:rgba(46,139,255,.8); background:linear-gradient(180deg, rgba(46,139,255,.28), rgba(255,255,255,.06))}
+    .btn.primary{background:linear-gradient(180deg, var(--accent), var(--accent-2)); border-color:transparent; color:#001022; font-weight:700}
+    .btn.ghost{background:transparent}
+    .btn.full{width:100%}
+
+    /* Main */
+    .main{display:grid; gap:18px}
+    .hero{position:relative; overflow:hidden; border-radius:var(--radius); border:1px solid rgba(255,255,255,.12); background:linear-gradient(160deg, rgba(46,139,255,.22), rgba(255,255,255,.06)); box-shadow:var(--shadow)}
+    .hero .inner{display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; padding:24px}
+    @media (max-width: 960px){ .hero .inner{grid-template-columns: 1fr} }
+    .hero h1{margin:0 0 6px; font-size:clamp(1.4rem, 2.2vw + .6rem, 2.4rem)}
+    .hero p{margin:.2rem 0 1rem; color:var(--muted)}
+
+    .stats{display:grid; grid-template-columns: repeat(3, 1fr); gap:12px}
+    @media (max-width:700px){ .stats{grid-template-columns: 1fr 1fr} }
+    .kpi{background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:14px; padding:12px}
+    .kpi .v{font-weight:800; font-size:1.4rem}
+    .kpi .d{color:var(--muted); font-size:.88rem}
+
+    .toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .search{flex:1; min-width:200px}
+
+    .cards{display:grid; grid-template-columns: repeat(3, 1fr); gap:16px}
+    @media (max-width: 1100px){ .cards{grid-template-columns: repeat(2, 1fr)} }
+    @media (max-width: 720px){ .cards{grid-template-columns: 1fr} }
+
+    .card{background:var(--card); border:1px solid rgba(255,255,255,.12); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); display:grid}
+    .card .media{height:140px; background: radial-gradient(600px 230px at 0% 100%, rgba(90,209,255,.22), transparent 60%), linear-gradient(135deg, rgba(46,139,255,.5), rgba(46,139,255,.15)); display:flex; align-items:flex-end; padding:12px}
+    .badge{padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.16); font-size:.82rem}
+    .card .body{padding:14px; display:grid; gap:10px}
+    .row{display:flex; justify-content:space-between; align-items:center; gap:10px}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:.95rem}
+    .meta span{display:inline-flex; align-items:center; gap:6px}
+
+    .calendar{background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:var(--radius); padding:12px; display:grid; gap:10px}
+    .calendar .grid{display:grid; grid-template-columns: repeat(7, 1fr); gap:8px}
+    .calendar .day{background:rgba(255,255,255,.08); border:1px dashed rgba(255,255,255,.2); border-radius:12px; padding:10px; min-height:80px; display:grid; align-content:flex-start; gap:6px}
+    .calendar .day .num{font-size:.95rem; color:var(--muted)}
+    .calendar .dot{width:8px; height:8px; border-radius:999px; background:var(--accent)}
+
+    .toast{position:fixed; right:16px; bottom:16px; background:linear-gradient(180deg, rgba(46,139,255,.35), rgba(46,139,255,.16)); border:1px solid rgba(46,139,255,.5); color:var(--text); border-radius:14px; padding:12px 14px; display:none; box-shadow:var(--shadow); z-index:60}
+
+    .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); z-index:70; padding:14px}
+    .dialog{max-width:620px; width:min(620px, 100%); background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:18px; box-shadow:var(--shadow); overflow:hidden}
+    .dialog header{position:relative; background:linear-gradient(180deg, rgba(46,139,255,.25), transparent); border-bottom:1px solid rgba(255,255,255,.12)}
+    .dialog .content{padding:16px; display:grid; gap:12px}
+
+    .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.1); font-size:.9rem}
+    .tag.removable button{background:transparent; border:0; color:var(--muted)}
+
+    footer{border-top:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); padding:18px clamp(14px, 3vw, 28px); color:var(--muted); font-size:.95rem}
+
+    /* Utility */
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width:740px){ .grid-2{grid-template-columns:1fr} }
+    .hidden{display:none!important}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="bar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <!-- nowe logo: pochylone "S" -->
+          <svg width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SPORDER">
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#2e8bff"/>
+                <stop offset="1" stop-color="#5ad1ff"/>
+              </linearGradient>
+            </defs>
+            <g transform="skewX(-15)">
+              <path d="M70 20c0-8-9-12-20-12C35 8 25 13 19 22l10 7c4-6 12-10 21-10 7 0 10 2 10 5 0 5-7 7-18 10C27 38 16 44 16 57c0 12 11 21 28 21 13 0 24-5 30-13l-10-7c-5 6-13 9-20 9-8 0-12-3-12-7 0-5 6-7 18-10 16-4 30-9 30-25z" fill="url(#g)"/>
+            </g>
+          </svg>
+        </div>
+        <span>SPORDER</span>
+      </div>
+      <nav>
+        <!-- przyciski zamiast <a> dla lepszej kompatybilności Android -->
+        <button type="button" class="nav-btn" data-view="dashboard" aria-current="page">🏠 Pulpit</button>
+        <button type="button" class="nav-btn" data-view="trainings">🏃 Treningi</button>
+        <button type="button" class="nav-btn" data-view="friends">👥 Znajomi</button>
+        <button type="button" class="nav-btn" data-view="bookings">🗓️ Rezerwacje</button>
+        <button type="button" class="nav-btn" data-view="profile">⚙️ Profil</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- Sidebar -->
+    <aside class="side" id="sidebar">
+      <h3>Filtry</h3>
+      <div class="field">
+        <label class="label" for="q">Szukaj wydarzeń</label>
+        <input id="q" class="search" type="search" placeholder="Piłka, bieganie, joga…"/>
+      </div>
+      <div class="field">
+        <span class="label">Kiedy</span>
+        <div class="chipset" id="whenChips">
+          <button class="chip" data-when="today">Dziś</button>
+          <button class="chip" data-when="tomorrow">Jutro</button>
+          <button class="chip" data-when="weekend">Weekend</button>
+          <button class="chip" data-when="next7">7 dni</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label class="label" for="sport">Sport</label>
+          <select id="sport">
+            <option value="">Dowolny</option>
+            <option>Piłka nożna</option>
+            <option>Siatkówka</option>
+            <option>Koszykówka</option>
+            <option>Tenis</option>
+            <option>Bieganie</option>
+            <option>Rower</option>
+            <option>Pływanie</option>
+            <option>Joga</option>
+            <option>Crossfit</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label" for="level">Poziom</label>
+          <select id="level">
+            <option value="">Wszyscy</option>
+            <option>Nowicjusz</option>
+            <option>Średni</option>
+            <option>Zaawansowany</option>
+            <option>Pro</option>
+          </select>
+        </div>
+      </div>
+      <!-- ZMIANA: Data pod miastem, pełna szerokość -->
+      <div class="field">
+        <label class="label" for="city">Miasto / lokalizacja</label>
+        <input id="city" placeholder="np. Warszawa"/>
+      </div>
+      <div class="field">
+        <label class="label" for="date">Data</label>
+        <input id="date" type="date"/>
+      </div>
+
+      <div class="field">
+        <span class="label">Szybkie filtry</span>
+        <div class="chipset">
+          <button class="chip" data-quick="near">Blisko mnie</button>
+          <button class="chip" data-quick="free">Wolne miejsca</button>
+          <button class="chip" data-quick="friends">Ze znajomymi</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <button class="btn" id="resetBtn">Wyczyść</button>
+        <button class="btn primary" id="applyBtn">Zastosuj</button>
+      </div>
+
+      <hr style="border-color: rgba(255,255,255,.18); margin:16px 0"/>
+
+      <h3>Twoje skróty</h3>
+      <div class="chipset" id="favSports"></div>
+      <button class="btn full ghost" id="addFav">➕ Dodaj ulubiony sport</button>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <section class="hero" id="view-dashboard">
+        <div class="inner">
+          <div>
+            <h1>Umów się na wspólny trening — szybko i wygodnie</h1>
+            <p>SPORDER łączy ludzi, którzy chcą razem trenować. Wybierz sport, poziom, lokalizację i dołącz do ekipy. Twórz też własne wydarzenia!</p>
+            <div class="toolbar">
+              <button class="btn primary" id="openCreate">➕ Utwórz wydarzenie</button>
+              <button class="btn" id="quickJoin">⚡ Losowe dołączenie</button>
+              <button class="btn ghost" id="exportICS">📥 Eksport do kalendarza (.ics)</button>
+            </div>
+            <div class="stats" style="margin-top:14px">
+              <div class="kpi"><div class="v" id="kpiEvents">0</div><div class="d">Wydarzeń w okolicy</div></div>
+              <div class="kpi"><div class="v" id="kpiPeople">0</div><div class="d">Uczestników</div></div>
+              <div class="kpi"><div class="v" id="kpiFriends">0</div><div class="d">Znajomych gra dziś</div></div>
+            </div>
+          </div>
+          <div class="calendar" aria-label="Kalendarz tygodnia">
+            <div class="row"><strong id="calTitle">Ten tydzień</strong><div class="meta"><span id="calRange"></span></div></div>
+            <div class="grid" id="calendarGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-trainings" class="hidden">
+        <div class="row">
+          <h2>Treningi</h2>
+          <div class="meta">Sortuj:
+            <select id="sortBy">
+              <option value="time">Najbliższy termin</option>
+              <option value="distance">Najbliżej</option>
+              <option value="popular">Najpopularniejsze</option>
+            </select>
+          </div>
+        </div>
+        <div class="cards" id="cards"></div>
+      </section>
+
+      <section id="view-friends" class="hidden">
+        <h2>Znajomi</h2>
+        <p class="meta">Zapraszaj znajomych, twórz drużyny i dołączaj grupowo.</p>
+        <div class="cards" id="friendsList"></div>
+      </section>
+
+      <section id="view-bookings" class="hidden">
+        <h2>Moje rezerwacje</h2>
+        <div class="cards" id="myBookings"></div>
+      </section>
+
+      <section id="view-profile" class="hidden">
+        <h2>Profil</h2>
+        <div class="grid-2">
+          <div class="card" style="padding:14px">
+            <h3>Dane użytkownika</h3>
+            <div class="field"><label class="label" for="name">Imię</label><input id="name" placeholder="np. Ola"/></div>
+            <div class="field"><label class="label" for="homeCity">Miasto domowe</label><input id="homeCity" placeholder="np. Kraków"/></div>
+            <div class="field"><label class="label" for="prefLevel">Preferowany poziom</label>
+              <select id="prefLevel"><option>Nowicjusz</option><option>Średni</option><option>Zaawansowany</option><option>Pro</option></select>
+            </div>
+            <button class="btn primary" id="saveProfile">Zapisz profil</button>
+          </div>
+          <div class="card" style="padding:14px">
+            <h3>Powiadomienia</h3>
+            <div class="field"><label><input type="checkbox" id="notifyNew" checked/> Informuj o nowych wydarzeniach w pobliżu</label></div>
+            <div class="field"><label><input type="checkbox" id="notifyFriend" checked/> Gdy znajomy dołączy do wydarzenia</label></div>
+            <button class="btn" id="testToast">Przetestuj powiadomienie</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    © <span id="year"></span> SPORDER · SP ZOO BOBO💙 · <a href="#" id="aboutLink">O aplikacji</a>
+  </footer>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Modal: tworzenie / dołączanie -->
+<div class="modal" id="modal">
+  <div class="dialog">
+    <header class="bar">
+      <strong id="modalTitle">Nowe wydarzenie</strong>
+      <button class="nav-btn" id="closeModal" style="margin-left:auto">✖ Zamknij</button>
+    </header>
+    <div class="content" id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+  // --- Dane przykładowe ---
+  const SPORTS = ["Piłka nożna","Siatkówka","Koszykówka","Tenis","Bieganie","Rower","Pływanie","Joga","Crossfit"];
+  const LEVELS = ["Nowicjusz","Średni","Zaawansowany","Pro"];
+
+  const sampleEvents = (() => {
+    const base = new Date();
+    const plus = (d,h=18)=> new Date(base.getFullYear(), base.getMonth(), base.getDate()+d, h, 0, 0);
+    return [
+      {id:1, sport:"Piłka nożna", level:"Średni", city:"Warszawa", place:"Boisko Orlik, Mokotów", when: plus(0,19), spots: 10, taken:6, km:3.2, host:"Kuba", friends:["Ania"], cover:"⚽"},
+      {id:2, sport:"Bieganie", level:"Nowicjusz", city:"Warszawa", place:"Park Skaryszewski", when: plus(1,7), spots: 20, taken:9, km:2.1, host:"Ola", friends:[], cover:"🏃"},
+      {id:3, sport:"Tenis", level:"Zaawansowany", city:"Kraków", place:"Korty Pychowice", when: plus(2,18), spots: 4, taken:3, km:1.4, host:"Marek", friends:["Piotr","Ewa"], cover:"🎾"},
+      {id:4, sport:"Siatkówka", level:"Średni", city:"Gdańsk", place:"Plaża Stogi", when: plus(3,16), spots: 12, taken:8, km:5.7, host:"Karolina", friends:[], cover:"🏐"},
+      {id:5, sport:"Joga", level:"Wszyscy", city:"Wrocław", place:"Studio Namaste", when: plus(1,18), spots: 15, taken:12, km:1.1, host:"Aga", friends:["Magda"], cover:"🧘"},
+      {id:6, sport:"Koszykówka", level:"Średni", city:"Warszawa", place:"Hala Ochota", when: plus(5,20), spots: 10, taken:2, km:7.3, host:"Bartek", friends:[], cover:"🏀"},
+      {id:7, sport:"Rower", level:"Średni", city:"Poznań", place:"Malta — pętla", when: plus(6,10), spots: 8, taken:5, km:12.2, host:"Iza", friends:["Kamil"], cover:"🚴"},
+      {id:8, sport:"Pływanie", level:"Nowicjusz", city:"Warszawa", place:"Basen Inflancka", when: plus(4,18), spots: 6, taken:3, km:4.4, host:"Tomek", friends:[], cover:"🏊"},
+      {id:9, sport:"Crossfit", level:"Zaawansowany", city:"Łódź", place:"Box Centrum", when: plus(2,19), spots: 12, taken:10, km:2.8, host:"Kasia", friends:["Olek"], cover:"🏋️"},
+    ];
+  })();
+
+  const state = {
+    favSports: JSON.parse(localStorage.getItem('favSports')||'[]'),
+    bookings: JSON.parse(localStorage.getItem('bookings')||'[]'),
+    profile: JSON.parse(localStorage.getItem('profile')||'{}'),
+    filters: { q:"", sport:"", level:"", city:"", date:"", when:"", quick:new Set() },
+    view: 'dashboard'
+  };
+
+  // --- Utils ---
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const fmtTime = d => new Intl.DateTimeFormat('pl-PL', {dateStyle:'medium', timeStyle:'short'}).format(d);
+  const fmtDate = d => new Intl.DateTimeFormat('pl-PL', {weekday:'short', day:'2-digit', month:'short'}).format(d);
+
+  function toast(msg){
+    const t = $('#toast'); t.textContent = msg; t.style.display='block';
+    setTimeout(()=> t.style.display='none', 3000);
+  }
+
+  function save(){
+    localStorage.setItem('favSports', JSON.stringify(state.favSports));
+    localStorage.setItem('bookings', JSON.stringify(state.bookings));
+    localStorage.setItem('profile', JSON.stringify(state.profile));
+  }
+
+  // --- Renderers ---
+  function renderFavs(){
+    const box = $('#favSports'); box.innerHTML = '';
+    state.favSports.forEach((s,i)=>{
+      const tag = document.createElement('span');
+      tag.className='tag removable'; tag.innerHTML = `💙 ${s} <button aria-label="usuń" data-i="${i}">✖</button>`;
+      tag.querySelector('button').onclick = (e)=>{ state.favSports.splice(i,1); save(); renderFavs(); };
+      box.appendChild(tag);
+    });
+    if(!state.favSports.length){
+      const p=document.createElement('p'); p.className='meta'; p.textContent='Brak ulubionych. Dodaj swoje najczęstsze sporty.'; box.appendChild(p);
+    }
+  }
+
+  function renderCards(){
+    const list = filterEvents();
+    $('#kpiEvents').textContent = list.length;
+    $('#kpiPeople').textContent = list.reduce((a,e)=> a + e.taken, 0);
+    $('#kpiFriends').textContent = list.reduce((a,e)=> a + e.friends.length, 0);
+
+    const wrap = $('#cards'); wrap.innerHTML = '';
+    if(!list.length){ wrap.innerHTML = '<p class="meta">Brak wyników — zmień filtry.</p>'; return }
+
+    list.forEach(ev => {
+      const card = document.createElement('article'); card.className='card';
+      card.innerHTML = `
+        <div class="media">
+          <span class="badge">${ev.cover} ${ev.sport}</span>
+        </div>
+        <div class="body">
+          <div class="row">
+            <strong>${ev.place}</strong>
+            <span class="badge">${ev.level}</span>
+          </div>
+          <div class="meta">
+            <span>📍 ${ev.city}</span>
+            <span>🗓️ ${fmtTime(ev.when)}</span>
+            <span>👥 ${ev.taken}/${ev.spots}</span>
+            <span>📏 ${ev.km} km</span>
+          </div>
+          <div class="row">
+            <div class="meta">Organizator: ${ev.host}${ev.friends.length?` · Znajomi: ${ev.friends.join(', ')}`:''}</div>
+            <div style="display:flex; gap:8px">
+              <button class="btn ghost" data-fav="${ev.id}">☆ Obserwuj</button>
+              <button class="btn primary" data-join="${ev.id}">Dołącz</button>
+            </div>
+          </div>
+        </div>`;
+      wrap.appendChild(card);
+    });
+
+    // actions
+    $$('[data-join]').forEach(b=> b.onclick = ()=> openJoin(+b.dataset.join));
+  }
+
+  function renderFriends(){
+    const box = $('#friendsList'); box.innerHTML='';
+    const people = [
+      {name:'Pjoter', sports:['Joga','Bieganie'], online:true},
+      {name:'Łysy', sports:['Rower','Piłka nożna'], online:false},
+      {name:'Rudy', sports:['Pływanie'], online:true},
+      {name:'Szymon', sports:['Crossfit','Siatkówka'], online:false},
+    ];
+    people.forEach(p=>{
+      const card = document.createElement('div'); card.className='card'; card.style.padding='14px';
+      card.innerHTML = `
+        <div class="row">
+          <strong>👤 ${p.name}</strong>
+          <span class="badge" style="background:${p.online?'rgba(25,212,123,.28)':'rgba(255,90,122,.28)'}">${p.online?'Online':'Offline'}</span>
+        </div>
+        <div class="meta">Ulubione: ${p.sports.join(', ')}</div>
+        <div class="row">
+          <button class="btn" data-invite="${p.name}">📨 Zaproś</button>
+          <button class="btn ghost">💬 Napisz</button>
+        </div>`;
+      box.appendChild(card);
+    })
+    $$('[data-invite]').forEach(b=> b.onclick = ()=> toast(`Wysłano zaproszenie do ${b.dataset.invite}`));
+  }
+
+  function renderBookings(){
+    const box = $('#myBookings'); box.innerHTML = '';
+    if(!state.bookings.length){ box.innerHTML = '<p class="meta">Jeszcze nic nie zarezerwowałeś/aś.</p>'; return }
+    state.bookings.forEach(id=>{
+      const ev = sampleEvents.find(e=> e.id===id); if(!ev) return;
+      const el = document.createElement('div'); el.className='card'; el.innerHTML = `
+        <div class="body">
+          <div class="row"><strong>${ev.cover} ${ev.sport}</strong><span class="badge">${fmtTime(ev.when)}</span></div>
+          <div class="meta">${ev.place} · ${ev.city} · ${ev.level}</div>
+          <div class="row">
+            <button class="btn" data-ics="${ev.id}">📥 Zapisz do kalendarza</button>
+            <button class="btn ghost" data-cancel="${ev.id}">❌ Anuluj</button>
+          </div>
+        </div>`;
+      box.appendChild(el);
+    });
+    $$('[data-cancel]').forEach(b=> b.onclick = ()=>{
+      state.bookings = state.bookings.filter(x=> x!== +b.dataset.cancel); save(); renderBookings(); toast('Rezerwacja anulowana.');
+    });
+    $$('[data-ics]').forEach(b=> b.onclick = ()=> exportSingle(+b.dataset.ics));
+  }
+
+  function renderCalendar(){
+    const grid = $('#calendarGrid'); grid.innerHTML='';
+    const start = new Date(); const day = start.getDay();
+    const mondayOffset = (day+6)%7; // ile dni minęło od poniedziałku
+    const monday = new Date(start); monday.setDate(start.getDate()-mondayOffset);
+    const title = `${monday.toLocaleDateString('pl-PL',{day:'2-digit',month:'short'})} – ${new Date(monday.getFullYear(), monday.getMonth(), monday.getDate()+6).toLocaleDateString('pl-PL',{day:'2-digit',month:'short'})}`;
+    $('#calTitle').textContent = 'Bieżący tydzień';
+    $('#calRange').textContent = title;
+
+    for(let i=0;i<7;i++){
+      const d = new Date(monday); d.setDate(monday.getDate()+i);
+      const cell = document.createElement('div'); cell.className='day';
+      cell.innerHTML = `<div class="num">${fmtDate(d)}</div>`;
+      sampleEvents.filter(e=> sameDate(e.when,d)).slice(0,3).forEach(e=>{
+        const dot = document.createElement('div'); dot.className='dot'; dot.title=`${e.sport} · ${e.place}`; cell.appendChild(dot);
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  // --- Filtry ---
+  function sameDate(a,b){
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+  function filterEvents(){
+    let list = [...sampleEvents];
+    const f = state.filters;
+    if(f.q){ list = list.filter(e => [e.sport,e.city,e.place].join(' ').toLowerCase().includes(f.q.toLowerCase())) }
+    if(f.sport){ list = list.filter(e => e.sport===f.sport) }
+    if(f.level){ list = list.filter(e => (e.level===f.level) || (f.level==='Wszyscy' && e.level==='Wszyscy')) }
+    if(f.city){ list = list.filter(e => e.city.toLowerCase().includes(f.city.toLowerCase())) }
+    if(f.date){ const d = new Date(f.date); list = list.filter(e => sameDate(e.when,d)) }
+    if(f.when){
+      const now = new Date();
+      if(f.when==='today') list = list.filter(e=> sameDate(e.when, now));
+      if(f.when==='tomorrow'){ const t = new Date(now); t.setDate(now.getDate()+1); list = list.filter(e=> sameDate(e.when,t)); }
+      if(f.when==='weekend') list = list.filter(e=> [0,6].includes(e.when.getDay()));
+      if(f.when==='next7'){ const lim = new Date(now); lim.setDate(now.getDate()+7); list = list.filter(e=> e.when <= lim); }
+    }
+    if(f.quick.has('free')) list = list.filter(e=> e.taken < e.spots);
+    if(f.quick.has('friends')) list = list.filter(e=> e.friends.length>0);
+    if($('#sortBy')?.value==='distance' || f.quick.has('near')) list.sort((a,b)=> a.km-b.km);
+    else if($('#sortBy')?.value==='popular') list.sort((a,b)=> (b.taken/b.spots)-(a.taken/a.spots));
+    else list.sort((a,b)=> a.when-b.when);
+    return list;
+  }
+
+  // --- Modal join/create ---
+  function openJoin(id){
+    const ev = sampleEvents.find(e=> e.id===id); if(!ev) return;
+    $('#modalTitle').textContent = `Dołącz do: ${ev.sport}`;
+    $('#modalContent').innerHTML = `
+      <div class="meta">${ev.place} · ${ev.city} · ${fmtTime(ev.when)}</div>
+      <div class="field"><span class="label">Rola</span>
+        <div class="chipset">
+          <label class="chip"><input type="radio" name="role" value="zawodnik" checked/> Zawodnik</label>
+          <label class="chip"><input type="radio" name="role" value="rezerwowy"/> Rezerwowy</label>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label class="label">Twój poziom</label>
+          <select id="joinLevel">${LEVELS.map(l=>`<option ${l===ev.level?'selected':''}>${l}</option>`).join('')}</select></div>
+        <div class="field"><label class="label">Wiadomość do organizatora</label>
+          <input id="joinMsg" placeholder="np. spóźnię się 5 min"/></div>
+      </div>
+      <div class="row">
+        <button class="btn ghost" id="cancelJoin">Anuluj</button>
+        <button class="btn primary" id="confirmJoin">Potwierdź zapis</button>
+      </div>`;
+    $('#modal').style.display='grid';
+    $('#cancelJoin').onclick = closeModal;
+    $('#confirmJoin').onclick = ()=>{
+      if(!state.bookings.includes(id)) state.bookings.push(id);
+      save(); renderBookings(); toast('Dołączono do wydarzenia!');
+      closeModal();
+    }
+  }
+
+  function openCreateModal(){
+    $('#modalTitle').textContent = 'Utwórz wydarzenie';
+    $('#modalContent').innerHTML = `
+      <div class="grid-2">
+        <div class="field"><label class="label">Sport</label>
+          <select id="newSport">${SPORTS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="field"><label class="label">Poziom</label>
+          <select id="newLevel">${LEVELS.map(l=>`<option>${l}</option>`).join('')}</select></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label class="label">Miasto</label><input id="newCity" placeholder="np. Warszawa"/></div>
+        <div class="field"><label class="label">Miejsce</label><input id="newPlace" placeholder="np. Orlik, Grochów"/></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label class="label">Data i czas</label><input id="newDate" type="datetime-local"/></div>
+        <div class="field"><label class="label">Liczba miejsc</label><input id="newSpots" type="number" min="2" value="10"/></div>
+      </div>
+      <div class="row">
+        <button class="btn ghost" id="cancelNew">Anuluj</button>
+        <button class="btn primary" id="createNew">Utwórz</button>
+      </div>`;
+    $('#modal').style.display='grid';
+    $('#cancelNew').onclick = closeModal;
+    $('#createNew').onclick = ()=>{
+      const ev = {
+        id: Math.max(...sampleEvents.map(e=>e.id))+1,
+        sport: $('#newSport').value, level: $('#newLevel').value,
+        city: $('#newCity').value || 'Miasto', place: $('#newPlace').value || 'Miejsce',
+        when: new Date($('#newDate').value || Date.now()+86400000),
+        spots: +($('#newSpots').value||10), taken: 1, km: (Math.random()*8+1).toFixed(1), host: state.profile.name||'Ty', friends:[], cover:'⭐'
+      };
+      sampleEvents.push(ev);
+      renderCards(); renderCalendar(); toast('Wydarzenie utworzone!'); closeModal();
+    }
+  }
+  function closeModal(){ $('#modal').style.display='none' }
+
+  // --- Export ICS ---
+  function toICS(ev){
+    const pad = n => String(n).padStart(2,'0');
+    const dt = (d)=> `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+    const end = new Date(ev.when); end.setHours(end.getHours()+2);
+    const body = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//SPORDER//PL\nBEGIN:VEVENT\nUID:sporder-${ev.id}@local\nDTSTAMP:${dt(new Date())}\nDTSTART:${dt(ev.when)}\nDTEND:${dt(end)}\nSUMMARY:${ev.sport} — ${ev.place}\nLOCATION:${ev.city}\nDESCRIPTION:SPORDER\nEND:VEVENT\nEND:VCALENDAR`;
+    return new Blob([body],{type:'text/calendar'});
+  }
+  function exportSingle(id){
+    const ev = sampleEvents.find(e=> e.id===id); if(!ev) return;
+    const blob = toICS(ev); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`SPORDER-${ev.id}.ics`; a.click(); URL.revokeObjectURL(url);
+  }
+  function exportAll(){
+    state.bookings.forEach(exportSingle);
+  }
+
+  // --- Nawigacja widoków ---
+  function switchView(view){
+    state.view = view;
+    $$('[id^="view-"]').forEach(s=> s.classList.add('hidden'));
+    $(`#view-${view}`).classList.remove('hidden');
+    $$('.nav-btn').forEach(a=> a.removeAttribute('aria-current'));
+    $(`.nav-btn[data-view="${view}"]`).setAttribute('aria-current','page');
+  }
+
+  // --- Init ---
+  function init(){
+    $('#year').textContent = new Date().getFullYear();
+    renderFavs(); renderCards(); renderFriends(); renderBookings(); renderCalendar();
+
+    // Sidebar inputs
+    $('#q').oninput = (e)=>{ state.filters.q = e.target.value; renderCards(); };
+    $('#sport').onchange = (e)=>{ state.filters.sport = e.target.value; renderCards(); };
+    $('#level').onchange = (e)=>{ state.filters.level = e.target.value; renderCards(); };
+    $('#city').oninput = (e)=>{ state.filters.city = e.target.value; renderCards(); };
+    $('#date').onchange = (e)=>{ state.filters.date = e.target.value; renderCards(); };
+
+    $('#applyBtn').onclick = ()=> renderCards();
+    $('#resetBtn').onclick = ()=>{ state.filters={q:"",sport:"",level:"",city:"",date:"",when:"",quick:new Set()};
+      $$('#sidebar select, #sidebar input').forEach(el=> el.value='');
+      $$('#sidebar .chip.active').forEach(c=> c.classList.remove('active'));
+      renderCards(); };
+
+    // chips
+    $$('#whenChips .chip').forEach(ch=> ch.onclick = ()=>{
+      $$('#whenChips .chip').forEach(c=> c.classList.remove('active'));
+      ch.classList.add('active'); state.filters.when = ch.dataset.when; renderCards();
+    });
+    $$('#sidebar [data-quick]').forEach(ch=> ch.onclick=()=>{
+      if(state.filters.quick.has(ch.dataset.quick)){ state.filters.quick.delete(ch.dataset.quick); ch.classList.remove('active'); }
+      else { state.filters.quick.add(ch.dataset.quick); ch.classList.add('active'); }
+      renderCards();
+    });
+
+    // favs
+    $('#addFav').onclick = ()=>{
+      const pick = prompt('Dodaj ulubiony sport:', SPORTS[0]);
+      if(pick && !state.favSports.includes(pick)){ state.favSports.push(pick); save(); renderFavs(); }
+    };
+
+    // header actions
+    $('#openCreate').onclick = openCreateModal;
+    $('#quickJoin').onclick = ()=>{
+      const list = filterEvents().filter(e=> e.taken < e.spots);
+      if(!list.length) return toast('Brak wydarzeń z wolnymi miejscami.');
+      openJoin(list[0].id);
+    };
+    $('#exportICS').onclick = exportAll;
+
+    // profile
+    if(state.profile.name) $('#name').value = state.profile.name;
+    if(state.profile.homeCity) $('#homeCity').value = state.profile.homeCity;
+    if(state.profile.prefLevel) $('#prefLevel').value = state.profile.prefLevel;
+
+    $('#saveProfile').onclick = ()=>{
+      state.profile = { name: $('#name').value, homeCity: $('#homeCity').value, prefLevel: $('#prefLevel').value };
+      save(); toast('Zapisano profil.');
+    };
+    $('#testToast').onclick = ()=> toast('To jest przykładowe powiadomienie ✨');
+
+    // nav (BUTTONY zamiast A — lepsza zgodność Android)
+    $$('.nav-btn[data-view]').forEach(btn=> btn.onclick = ()=>{ switchView(btn.dataset.view); });
+
+    // sort
+    $('#sortBy').onchange = renderCards;
+
+    // zamykanie modala
+    $('#closeModal').onclick = closeModal;
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
