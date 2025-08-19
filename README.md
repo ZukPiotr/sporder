@@ -12,13 +12,13 @@
 
 ## Stack Technologiczny
 
-**FRONTEND** - React
-**BACKEND** - NestJS w Node.JS
-**WARSTWA API** - GraphQL
-**BAZA DANYCH** - PostgreSQL
-**UWIERZETYLNIANIE** - OAuth2.0 z JWT (JSON Web Token)
-**APLIKACJE MOBILNE** - React Native
-**KOMUNIKATOR** - Websockets + GraphQL Subscriptions
+- **FRONTEND** - React
+- **BACKEND** - NestJS w Node.JS
+- **WARSTWA API** - GraphQL
+- **BAZA DANYCH** - PostgreSQL
+- **UWIERZETYLNIANIE** - OAuth2.0 z JWT (JSON Web Token)
+- **APLIKACJE MOBILNE** - React Native
+- **KOMUNIKATOR** - Websockets + GraphQL Subscriptions
 
 ## Problemy architektoniczne
 - Serwerowanie
