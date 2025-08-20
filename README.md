@@ -1,5 +1,11 @@
 # SPORDER
 
+## Issue
+- Jeden duży plik, przydałby się podział na mniejsze komponenty
+- Dodanie konteneryzacji
+- Skalowalność UI'a
+
+
 ## Jakie funkcjonalności mają się tam znaleźć
 - Komunikator
   - Prosta komunikacja pomiędzy użytkownikami
