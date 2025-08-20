@@ -4,6 +4,7 @@
 - Komunikator
   - Prosta komunikacja pomiędzy użytkownikami
 - System rezerwacji
+  - System wymiany barterowej - Trening za terning
   - Płatne zajecia indywidualne/grupwe
   - Rezerwacja slotów na konkretne gierki/wydarzenia
 - System grup i znajomych
