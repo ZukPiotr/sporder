@@ -7,8 +7,9 @@
   - Płatne zajecia indywidualne/grupwe
   - Rezerwacja slotów na konkretne gierki/wydarzenia
 - System grup i znajomych
-  - Informowanie który znajomy idzie na jaki event
+  - Informowanie który znajomy bierze udział w jakim wydarzeniu
 - System wydarzeń
+- System zbierania punktów za udział 
 - Nawigacja
   - Wyszukiwarka eventów/gierek/spotkań 
 - Tagowanie
