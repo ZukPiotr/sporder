@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./contexts/AuthContext";
-import { useToast } from "./hooks/useToast";
+import { useToast } from "./hooks/useToast.jsx";
 import useLocalStorage from "./hooks/useLocalStorage";
 import * as eventsApi from "./api/events";
 import { downloadICS } from "./utils/ics";
@@ -152,4 +152,5 @@ export default function App() {
       <style>{`:root { color-scheme: dark; }`}</style>
     </div>
   );
+
 }
