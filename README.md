@@ -5,6 +5,8 @@
 - Dodanie konteneryzacji
 - Skalowalność UI'a
 
+## Instrukcja obsługi
+
 
 ## Jakie funkcjonalności mają się tam znaleźć
 - Komunikator
