@@ -6,6 +6,16 @@
 - Skalowalność UI'a
 
 ## Instrukcja obsługi
+- Frontend
+  - ```npm install```
+  - ```npm run dev```
+- Backend
+  - ```npx @nestjs/cli new backend```
+    - menager -> npm
+  -   
+- Baza danych
+- Docker
+  - ```docker-compose up -d``` 
 
 
 ## Jakie funkcjonalności mają się tam znaleźć
