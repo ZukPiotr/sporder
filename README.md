@@ -12,7 +12,16 @@
 - Backend
   - ```npx @nestjs/cli new backend```
     - menager -> npm
-  -   
+  - Moduł do konfiguracji (odczyt zmiennych z .env)
+    - ``npm install @nestjs/config``
+  - Zależności do połączenia z bazą danych PostgreSQL
+    - ```npm install @nestjs/typeorm typeorm pg```
+  - Zależności do autentykacji (JWT, Passport) i hashowania haseł
+    - ```npm install @nestjs/passport passport passport-jwt @nestjs/jwt bcrypt```
+    - ```npm install --save-dev @types/passport-jwt @types/bcrypt```
+
+# Zależności do walidacji danych przychodzących w API
+npm install class-validator class-transformer
 - Baza danych
 - Docker
   - ```docker-compose up -d``` 
