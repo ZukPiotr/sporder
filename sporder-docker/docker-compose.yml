@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sporder-backend
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sporder-frontend
+    ports:
+      # Mapuje port 5173 na Twoim komputerze na port 80 w kontenerze (gdzie działa Nginx)
+      - "${FRONTEND_PORT}:80"
+    restart: always
+
+  db:
+    image: postgres:16-alpine
+    container_name: sporder-db
+    env_file:
+      - .env
+    volumes:
+      - sporder-data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: always
+
+volumes:
+  sporder-data:

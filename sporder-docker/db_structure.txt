@@ -1,0 +1,49 @@
+USERS
+Informacje o zarejestrowanych użytkownikach
+Nazwa Kolumny	Typ Danych	Opis
+id	SERIAL PRIMARY KEY	Unikalny identyfikator użytkownika (auto-inkrementowany).
+name	VARCHAR(255) NOT NULL	Imię lub nick użytkownika.
+email	VARCHAR(255) UNIQUE NOT NULL	Adres e-mail, musi być unikalny.
+password_hash	VARCHAR(255) NOT NULL	Zahashowane hasło użytkownika.
+home_city   VARCHAR(255) Miasto domowe użytkownika
+created_at	TIMESTAMPTZ DEFAULT NOW()	Data i czas utworzenia konta.
+
+EVENTS
+Przechowuje wszystkie wydarzenia sportowe
+Nazwa Kolumny	Typ Danych	Opis
+id	SERIAL PRIMARY KEY	Unikalny identyfikator wydarzenia.
+sport	VARCHAR(100) NOT NULL	Nazwa dyscypliny sportowej.
+level	VARCHAR(50) NOT NULL	Poziom zaawansowania.
+city	VARCHAR(255) NOT NULL	Miasto, w którym odbywa się wydarzenie.
+place	VARCHAR(255) NOT NULL	Dokładne miejsce (np. nazwa boiska).
+when	TIMESTAMPTZ NOT NULL	Data i czas rozpoczęcia wydarzenia.
+spots	INTEGER NOT NULL	Całkowita liczba dostępnych miejsc.
+host_id	INTEGER REFERENCES users(id)	ID użytkownika, który jest organizatorem (klucz obcy).
+created_at	TIMESTAMPTZ DEFAULT NOW()	Data i czas utworzenia wydarzenia.
+
+EVENTS_PARTICIPANTS
+Przechowuje informacje o tym, który użytkownik dołączył do którego wydarzenia. Modeluje relację wielu-do-wielu.
+Nazwa Kolumny	Typ Danych	Opis
+user_id	INTEGER REFERENCES users(id)	ID użytkownika dołączającego (klucz obcy).
+event_id	INTEGER REFERENCES events(id)	ID wydarzenia, do którego dołącza (klucz obcy).
+joined_at	TIMESTAMPTZ DEFAULT NOW()	Data i czas dołączenia.
+Klucz główny	PRIMARY KEY (user_id, event_id)	Gwarantuje, że jeden użytkownik może dołączyć do jednego wydarzenia tylko raz.
+
+FRIENDSHIPS
+Relacje między użytkownikami
+Nazwa Kolumny	Typ Danych	Opis
+user_one_id	INTEGER REFERENCES users(id)	ID pierwszego użytkownika w relacji.
+user_two_id	INTEGER REFERENCES users(id)	ID drugiego użytkownika w relacji.
+status	VARCHAR(50) NOT NULL	Status relacji, np. 'pending', 'accepted', 'blocked'.
+action_user_id	INTEGER REFERENCES users(id)	ID użytkownika, który wykonał ostatnią akcję (wysłał zaproszenie, zaakceptował).
+created_at	TIMESTAMPTZ DEFAULT NOW()	Data utworzenia relacji.
+updated_at	TIMESTAMPTZ DEFAULT NOW()	Data ostatniej modyfikacji statusu.
+
+USER_SPORTS
+Przechowuje informacje o sportach, które dany użytkownik uprawia.
+Nazwa Kolumny	Typ Danych	Opis
+user_id	INTEGER REFERENCES users(id)	ID użytkownika (klucz obcy).
+sport_name	VARCHAR(100) NOT NULL	Nazwa sportu.
+skill_level	VARCHAR(50) NOT NULL	Poziom zaawansowania użytkownika w TYM konkretnym sporcie.
+is_favorite	BOOLEAN DEFAULT FALSE	Oznaczenie, czy jest to ulubiony sport (dla skrótów w UI).
+Klucz główny	PRIMARY KEY (user_id, sport_name)	Gwarantuje, że dla danego sportu użytkownik ma zdefiniowany tylko jeden poziom.
