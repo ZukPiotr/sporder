@@ -2,6 +2,7 @@
 import React from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../hooks/useToast.jsx';
 import { LEVELS } from '../constants';
 import Card from '../components/ui/Card';
 import Field from '../components/ui/Field';
@@ -9,9 +10,10 @@ import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Button from '../components/ui/Button';
 
-export default function ProfilePage({ showToast }) {
+export default function ProfilePage() {
   const { currentUser } = useAuth();
   const [profile, setProfile] = useLocalStorage("profile", {});
+  const { show: showToast } = useToast();
 
   const handleProfileChange = (key, value) => {
     setProfile(p => ({...p, [key]: value}));

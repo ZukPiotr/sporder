@@ -1,5 +1,7 @@
 // src/api/events.js
 
+import { v4 as uuidv4 } from 'uuid';
+
 // --- MOCK DATA ---
 const sampleEventsSeed = () => {
   const base = new Date();
@@ -35,7 +37,8 @@ export const createEvent = async (eventData) => {
   await new Promise(res => setTimeout(res, 300));
   const newEvent = {
     ...eventData,
-    id: Math.floor(Math.random() * 1e9),
+    //id: Math.floor(Math.random() * 1e9),
+    id: uuidv4(),
     taken: 1,
     km: (Math.random() * 8 + 1).toFixed(1),
     friends: [],

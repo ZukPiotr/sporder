@@ -1,22 +1,17 @@
 // src/pages/BookingsPage.jsx
 import React from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
-import { useEvents } from '../hooks/useEvents';
+import { useBookings } from '../contexts/BookingsContext.jsx';
+import { useEventsContext } from '../contexts/EventsContext.jsx';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import { fmtTime } from '../utils/formatters';
 import { downloadICS } from '../utils/ics';
 
-export default function BookingsPage({ showToast }) {
-  const [bookings, setBookings] = useLocalStorage("bookings", []);
-  const { allEvents, loading } = useEvents();
+export default function BookingsPage() {
+  const { bookings, cancelBooking } = useBookings();
+  const { allEvents, loading } = useEventsContext();
 
-  const cancelBooking = (id) => {
-    setBookings((b) => b.filter((x) => x !== id));
-    showToast("Rezerwacja anulowana.");
-  }
-  
   const exportSingle = (ev) => {
     if (!ev) return;
     downloadICS(ev, `SPORDER-${ev.id}.ics`);
