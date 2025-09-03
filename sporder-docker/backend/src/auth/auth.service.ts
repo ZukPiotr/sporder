@@ -16,10 +16,15 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
+    // Tworzymy użytkownika w bazie danych. Hook @BeforeInsert w encji zahashuje hasło.
     const user = await this.usersService.create(createUserDto);
-    // Usuwamy hasło z obiektu zwracanego do klienta
-    const { password, ...result } = user;
-    return result;
+    
+    // !! KLUCZOWA ZMIANA !!
+    // Po udanym stworzeniu użytkownika, od razu wywołujemy funkcję login,
+    // aby wygenerować dla niego token i zwrócić pełny pakiet danych.
+    // Używamy hasła z DTO (przed hashowaniem), ponieważ funkcja login
+    // sama zajmuje się porównaniem hashy za pomocą bcrypt.compare.
+    return this.login(user.email, createUserDto.password);
   }
 
   async login(email: string, pass: string) {
@@ -27,9 +32,14 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(pass, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    // Usuwamy hash hasła z obiektu, który zwrócimy do frontendu
+    const { password, ...userData } = user;
     const payload = { sub: user.id, email: user.email };
+    
     return {
       access_token: this.jwtService.sign(payload),
+      user: userData,
     };
   }
 }

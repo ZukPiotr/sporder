@@ -23,12 +23,12 @@ import { FriendshipsModule } from './friendships/friendships.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get<string>('DATABASE_HOST'),
-        port: parseInt(configService.get<string>('DATABASE_PORT'), 10),
+        port: parseInt(configService.get<string>('DATABASE_PORT') || '5432', 10),
         username: configService.get<string>('POSTGRES_USER'),
         password: configService.get<string>('POSTGRES_PASSWORD'),
         database: configService.get<string>('POSTGRES_DB'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'], // Automatycznie wczytuj wszystkie encje
-        synchronize: true, // UWAGA: Na produkcji powinno być false! Automatycznie tworzy tabele.
+        synchronize: false, // UWAGA: Na produkcji powinno być false! Automatycznie tworzy tabele.
       }),
     }),
     // 3. Dodane moduły aplikacji

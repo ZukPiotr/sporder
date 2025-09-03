@@ -56,7 +56,7 @@ export class FriendshipsService {
     userId: number,
     requesterId: number,
     status: FriendshipStatus,
-  ): Promise<Friendship> {
+  ): Promise<Friendship | null> {
     const key = this.getFriendshipKey(userId, requesterId);
     const friendship = await this.friendshipsRepository.findOneBy(key);
 

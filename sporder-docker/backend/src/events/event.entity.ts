@@ -1,12 +1,13 @@
-import { User } from '../users/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
   ManyToOne,
-  JoinColumn,
+  OneToMany,
+  JoinColumn, // <-- NOWY IMPORT
 } from 'typeorm';
+import { User } from '../users/user.entity';
+import { EventParticipant } from './event-participant.entity'; // <-- NOWY IMPORT
 
 @Entity('events')
 export class Event {
@@ -21,23 +22,26 @@ export class Event {
 
   @Column()
   city: string;
-
+  
   @Column()
   place: string;
 
-  @Column({ type: 'timestamptz' })
+  @Column()
   when: Date;
 
   @Column()
   spots: number;
 
-  @Column({ name: 'host_id' })
-  hostId: number;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'host_id' })
   host: User;
+
+  // !! NOWA RELACJA !!
+  // Mówi TypeORM, że jedno wydarzenie może mieć wiele wpisów w tabeli event_participants
+  @OneToMany(() => EventParticipant, (participant) => participant.event)
+  participants: EventParticipant[];
+
+  // Ta właściwość nie jest kolumną w bazie danych.
+  // Będziemy ją obliczać w serwisie przed wysłaniem danych do frontendu.
+  taken: number;
 }

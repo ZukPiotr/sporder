@@ -1,6 +1,8 @@
+// Lokalizacja: src/profiles/profiles.service.ts
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../users/user.entity';
 import { UserSport } from './user-sport.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -8,52 +10,63 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 @Injectable()
 export class ProfilesService {
   constructor(
+    private dataSource: DataSource,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(UserSport)
     private userSportsRepository: Repository<UserSport>,
   ) {}
 
-  async findProfileByUserId(userId: number): Promise<User> {
+  async findProfileByUserId(
+    userId: number,
+  ): Promise<Omit<User, 'password' | 'hashPassword'>> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
-      relations: ['sports'], // Dołączamy relację ze sportami
+      relations: ['sports'],
     });
 
     if (!user) {
       throw new NotFoundException('Użytkownik nie został znaleziony.');
     }
-    // Usuwamy hasło przed zwróceniem danych
-    delete user.password;
-    return user;
+    
+    const { password, ...result } = user;
+    return result;
   }
 
   async updateProfile(
     userId: number,
     updateProfileDto: UpdateProfileDto,
-  ): Promise<User> {
-    const user = await this.findProfileByUserId(userId);
+  ): Promise<Omit<User, 'password' | 'hashPassword'>> {
+    return this.dataSource.transaction(async (transactionalEntityManager) => {
+      const userRepo = transactionalEntityManager.getRepository(User);
+      const sportsRepo = transactionalEntityManager.getRepository(UserSport);
+      
+      const user = await userRepo.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('Użytkownik nie został znaleziony.');
+      }
 
-    // Aktualizuj podstawowe dane profilu
-    if (updateProfileDto.name) user.name = updateProfileDto.name;
-    if (updateProfileDto.homeCity) user.homeCity = updateProfileDto.homeCity;
+      if (updateProfileDto.name) user.name = updateProfileDto.name;
+      if (updateProfileDto.homeCity) user.homeCity = updateProfileDto.homeCity;
 
-    // Aktualizuj sporty (jeśli zostały przesłane)
-    if (updateProfileDto.sports) {
-      // 1. Usuń stare sporty
-      await this.userSportsRepository.delete({ userId });
-      // 2. Dodaj nowe sporty
-      const sportsToSave = updateProfileDto.sports.map((sportDto) =>
-        this.userSportsRepository.create({
-          userId,
-          ...sportDto,
-        }),
-      );
-      await this.userSportsRepository.save(sportsToSave);
-    }
+      if (updateProfileDto.sports) {
+        await sportsRepo.delete({ userId: user.id });
 
-    await this.usersRepository.save(user);
-    // Zwróć zaktualizowany profil z nowymi sportami
-    return this.findProfileByUserId(userId);
+        if (updateProfileDto.sports.length > 0) {
+          const sportsToSave = updateProfileDto.sports.map((sportDto) =>
+            sportsRepo.create({
+              userId: user.id,
+              sportName: sportDto.sportName,
+              skillLevel: sportDto.skillLevel,
+              isFavorite: sportDto.isFavorite ?? false,
+            }),
+          );
+          await sportsRepo.save(sportsToSave);
+        }
+      }
+
+      await userRepo.save(user);
+      return this.findProfileByUserId(userId);
+    });
   }
 }
