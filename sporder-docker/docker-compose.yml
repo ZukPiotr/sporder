@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dockerfile
     container_name: sporder-backend
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
@@ -17,7 +17,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dockerfile
     container_name: sporder-frontend
     ports:
       # Mapuje port 5173 na Twoim komputerze na port 80 w kontenerze (gdzie działa Nginx)
