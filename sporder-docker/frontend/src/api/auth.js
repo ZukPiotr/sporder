@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+//const API_URL = import.meta.env.VITE_API_BASE_URL;
+//console.log('Wczytany API URL z .env:', import.meta.env.VITE_API_BASE_URL);
+
+const API_URL = '/api';
 
 /**
  * Rejestruje nowego użytkownika, wysyłając dane do backendu.

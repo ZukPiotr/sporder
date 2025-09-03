@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast.jsx';
 import * as profilesApi from '../api/profiles';
@@ -10,44 +10,29 @@ import Select from '../components/ui/Select';
 import Button from '../components/ui/Button';
 
 export default function ProfilePage() {
-  const { token } = useAuth();
+  const { currentUser, token, setCurrentUser } = useAuth();
   const { show: showToast } = useToast();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  const [profile, setProfile] = useState(currentUser);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Efekt do pobierania danych profilu przy pierwszym renderowaniu
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (token) {
-        try {
-          setLoading(true);
-          const data = await profilesApi.getMyProfile(token);
-          setProfile(data);
-        } catch (error) {
-          showToast(`Błąd: ${error.message}`);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-    fetchProfile();
-  }, [token]);
+  // Bezpiecznie pobieramy tablicę sportów. Jeśli nie istnieje, używamy pustej tablicy.
+  const userSports = profile?.sports || [];
 
   const handleProfileChange = (key, value) => {
     setProfile(p => ({ ...p, [key]: value }));
   };
   
   const handleSportChange = (index, key, value) => {
-    const newSports = [...profile.sports];
+    const newSports = [...userSports];
     newSports[index] = { ...newSports[index], [key]: value };
     setProfile(p => ({ ...p, sports: newSports }));
   };
 
   const addSport = () => {
-    const newSports = [...(profile.sports || [])];
-    // Sprawdź, czy domyślny sport nie jest już dodany
+    const newSports = [...userSports];
     if (!newSports.some(s => s.sportName === SPORTS[0])) {
-        newSports.push({ sportName: SPORTS[0], skillLevel: 'Nowicjusz', isFavorite: false });
+        newSports.push({ sportName: SPORTS[0], skillLevel: 'Nowicjusz' });
         setProfile(p => ({ ...p, sports: newSports }));
     } else {
         showToast("Ten sport jest już na liście.");
@@ -55,26 +40,27 @@ export default function ProfilePage() {
   };
   
   const removeSport = (index) => {
-      const newSports = profile.sports.filter((_, i) => i !== index);
+      const newSports = userSports.filter((_, i) => i !== index);
       setProfile(p => ({ ...p, sports: newSports }));
   }
 
   const handleSave = async () => {
     if (!token) return;
+    setIsSaving(true);
+    showToast("Trwa zapisywanie...");
     try {
-      await profilesApi.updateMyProfile(profile, token);
-      showToast("Profil został zaktualizowany!");
+      const updatedProfile = await profilesApi.updateMyProfile(profile, token);
+      setCurrentUser(updatedProfile);
+      showToast("Zmiany zostały zapisane!");
     } catch (error) {
-      showToast(`Błąd: ${error.message}`);
+      showToast(`Błąd zapisu: ${error.message}`, 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  if (loading) {
-    return <p>Wczytywanie profilu...</p>;
-  }
-
   if (!profile) {
-    return <p>Nie udało się załadować profilu. Spróbuj zalogować się ponownie.</p>;
+    return <p>Nie jesteś zalogowany. Zaloguj się, aby zobaczyć swój profil.</p>;
   }
 
   return (
@@ -93,7 +79,8 @@ export default function ProfilePage() {
         <Card className="p-4">
           <h3 className="mb-3 text-lg font-semibold">Moje sporty</h3>
           <div className="grid gap-4">
-            {profile.sports && profile.sports.map((sport, index) => (
+            {/* Mapujemy po bezpiecznej zmiennej userSports */}
+            {userSports.map((sport, index) => (
               <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
                 <Field label="Sport">
                   <Select value={sport.sportName} onChange={(e) => handleSportChange(index, 'sportName', e.target.value)}>
@@ -113,7 +100,9 @@ export default function ProfilePage() {
         </Card>
       </div>
       <div className="flex justify-end">
-        <Button variant="primary" onClick={handleSave}>Zapisz zmiany</Button>
+        <Button variant="primary" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Zapisywanie...' : 'Zapisz zmiany'}
+        </Button>
       </div>
     </section>
   );

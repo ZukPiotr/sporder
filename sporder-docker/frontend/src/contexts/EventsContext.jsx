@@ -1,31 +1,34 @@
 // src/contexts/EventsContext.jsx
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import * as eventsApi from "../api/events";
 import { sameDate } from "../utils/date";
-import { useFilters } from "./FiltersContext"; // <-- IMPORT
+import { useFilters } from "./FiltersContext";
 
 const EventsContext = createContext(null);
 
 export function EventsProvider({ children }) {
-  const { filters } = useFilters(); // <-- POBIERA FILTRY Z KONTEKSTU
+  const { filters } = useFilters();
   const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 1. WYODRĘBNIAMY LOGIKĘ POBIERANIA DANYCH DO OSOBNEJ FUNKCJI
+  const fetchAndSetEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const events = await eventsApi.fetchEvents();
+      setAllEvents(events);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []); // useCallback, aby funkcja nie tworzyła się na nowo przy każdym renderze
+
+  // 2. useEffect teraz tylko wywołuje tę funkcję przy pierwszym renderowaniu
   useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        setLoading(true);
-        const events = await eventsApi.fetchEvents();
-        setAllEvents(events);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadEvents();
-  }, []);
+    fetchAndSetEvents();
+  }, [fetchAndSetEvents]);
 
   const filteredEvents = useMemo(() => {
     // ... cała logika filtrowania pozostaje bez zmian
@@ -37,11 +40,11 @@ export function EventsProvider({ children }) {
     if (city) list = list.filter((e) => e.city.toLowerCase().includes(city.toLowerCase()));
     if (date) { const d = new Date(date); list = list.filter((e) => sameDate(e.when, d)); }
     if (when) {
-        const now = new Date();
-        if (when === "today") list = list.filter((e) => sameDate(e.when, now));
-        if (when === "tomorrow") { const t = new Date(now); t.setDate(now.getDate() + 1); list = list.filter((e) => sameDate(e.when, t)); }
-        if (when === "weekend") list = list.filter((e) => [0, 6].includes(e.when.getDay()));
-        if (when === "next7") { const lim = new Date(now); lim.setDate(now.getDate() + 7); list = list.filter((e) => e.when <= lim); }
+      const now = new Date();
+      if (when === "today") list = list.filter((e) => sameDate(e.when, now));
+      if (when === "tomorrow") { const t = new Date(now); t.setDate(now.getDate() + 1); list = list.filter((e) => sameDate(e.when, t)); }
+      if (when === "weekend") list = list.filter((e) => [0, 6].includes(e.when.getDay()));
+      if (when === "next7") { const lim = new Date(now); lim.setDate(now.getDate() + 7); list = list.filter((e) => e.when <= lim); }
     }
     if (quick?.has("free")) list = list.filter((e) => e.taken < e.spots);
     if (quick?.has("friends")) list = list.filter((e) => e.friends.length > 0);
@@ -55,7 +58,15 @@ export function EventsProvider({ children }) {
     setAllEvents(prev => [...prev, event]);
   }
 
-  const value = { allEvents, filteredEvents, loading, error, addEvent };
+  const value = {
+    allEvents,
+    filteredEvents,
+    loading,
+    error,
+    addEvent,
+    // 3. UDOSTĘPNIAMY NASZĄ FUNKCJĘ POD NAZWĄ `refetchEvents`
+    refetchEvents: fetchAndSetEvents,
+  };
 
   return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;
 }

@@ -1,4 +1,3 @@
-// src/components/EventCard.jsx
 import React from "react";
 import Card from "./ui/Card";
 import Badge from "./ui/Badge";
@@ -26,7 +25,8 @@ export default function EventCard({ ev, onJoin }) {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 mt-auto">
           <div className="text-sm text-[var(--muted)]">
-            Organizator: {ev.host}
+            {/* !! TUTAJ JEST POPRAWKA !! */}
+            Organizator: {ev.host?.name}
             {ev.friends?.length ? ` · Znajomi: ${ev.friends.join(", ")}` : ""}
           </div>
           <div className="flex gap-2">

@@ -1,4 +1,3 @@
-// src/components/layout/Header.jsx
 import React from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import Button from "../ui/Button";
@@ -7,36 +6,35 @@ import Badge from "../ui/Badge";
 const navItems = [
   { k: "dashboard", t: "🏠 Pulpit" },
   { k: "trainings", t: "🏃 Treningi" },
-  { k: "friends", t: "👥 Znajomi" },
-  { k: "bookings", t: "🗓️ Rezerwacje" },
-  { k: "profile", t: "⚙️ Profil" },
+  { k: "friends", t: "👥 Znajomi", auth: true },
+  { k: "bookings", t: "🗓️ Rezerwacje", auth: true },
+  { k: "profile", t: "⚙️ Profil", auth: true },
 ];
 
 export default function Header({ view, setView, onLoginClick, onRegisterClick }) {
-  const { currentUser, logout } = useAuth();
+  // 1. POBIERAMY `isAuthenticated` Z KONTEKSTU
+  const { currentUser, logout, isAuthenticated } = useAuth();
+
+  // 2. FILTRUJEMY TABLICĘ `navItems`
+  //    Pokazujemy link, jeśli:
+  //    - nie wymaga autoryzacji LUB
+  //    - użytkownik jest zalogowany
+  const visibleNavItems = navItems.filter(item => !item.auth || isAuthenticated);
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[linear-gradient(180deg,rgba(10,15,26,.85),rgba(10,15,26,.6))] backdrop-blur">
       <div className="flex items-center gap-3 px-[clamp(14px,3vw,28px)] py-3">
         <div className="flex items-center gap-3 font-extrabold tracking-wide">
+          {/* ... logo bez zmian ... */}
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] shadow-xl">
-            <svg width="22" height="22" viewBox="0 0 100 100" aria-label="SPORDER" role="img">
-              <defs>
-                <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stopColor="#2e8bff" />
-                  <stop offset="1" stopColor="#5ad1ff" />
-                </linearGradient>
-              </defs>
-              <g transform="skewX(-15)">
-                <path d="M70 20c0-8-9-12-20-12C35 8 25 13 19 22l10 7c4-6 12-10 21-10 7 0 10 2 10 5 0 5-7 7-18 10C27 38 16 44 16 57c0 12 11 21 28 21 13 0 24-5 30-13l-10-7c-5 6-13 9-20 9-8 0-12-3-12-7 0-5 6-7 18-10 16-4 30-9 30-25z" fill="url(#g1)" />
-              </g>
-            </svg>
+            <svg width="22" height="22" viewBox="0 0 100 100" aria-label="SPORDER" role="img"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#2e8bff" /><stop offset="1" stopColor="#5ad1ff" /></linearGradient></defs><g transform="skewX(-15)"><path d="M70 20c0-8-9-12-20-12C35 8 25 13 19 22l10 7c4-6 12-10 21-10 7 0 10 2 10 5 0 5-7 7-18 10C27 38 16 44 16 57c0 12 11 21 28 21 13 0 24-5 30-13l-10-7c-5 6-13 9-20 9-8 0-12-3-12-7 0-5 6-7 18-10 16-4 30-9 30-25z" fill="url(#g1)" /></g></svg>
           </div>
           <span className="text-xl">SPORDER</span>
         </div>
 
         <nav className="ml-auto flex flex-wrap gap-2">
-          {navItems.map((it) => (
+          {/* 3. MAPUJEMY PO NOWEJ, ODFILTROWANEJ TABLICY */}
+          {visibleNavItems.map((it) => (
             <button
               key={it.k}
               onClick={() => setView(it.k)}

@@ -5,6 +5,7 @@ import { useBookings } from "./contexts/BookingsContext.jsx";
 import { useEventsContext } from "./contexts/EventsContext.jsx";
 import { downloadICS } from "./utils/ics";
 import * as eventsApi from "./api/events";
+import * as bookingsApi from "./api/bookings"; // <-- 1. DODAJEMY NOWY IMPORT
 
 import { FiltersProvider } from "./contexts/FiltersContext.jsx";
 import { EventsProvider } from "./contexts/EventsContext.jsx";
@@ -25,10 +26,11 @@ import Button from "./components/ui/Button";
 import { fmtTime } from "./utils/formatters";
 
 function AppContent() {
-  const { currentUser, isAuthenticated } = useAuth();
+  const { currentUser, isAuthenticated, token } = useAuth();
   const { show: showToast } = useToast();
   const { bookings, addBooking } = useBookings();
-  const { allEvents, addEvent } = useEventsContext();
+  // 2. POBIERAMY FUNKCJĘ `refetchEvents` Z KONTEKSTU
+  const { allEvents, addEvent, refetchEvents } = useEventsContext();
 
   const [view, setView] = useState("dashboard");
   const [authOpen, setAuthOpen] = useState(false);
@@ -50,7 +52,7 @@ function AppContent() {
   
   const handleCreateEvent = async (eventData) => {
     try {
-        const newEvent = await eventsApi.createEvent(eventData);
+        const newEvent = await eventsApi.createEvent(eventData, token);
         addEvent(newEvent);
         setCreateOpen(false);
         showToast("Wydarzenie utworzone!");
@@ -74,10 +76,24 @@ function AppContent() {
     }
   };
 
-  const confirmJoin = () => {
-    if (joinEventDetails) {
+  // 3. PRZEPISUJEMY LOGIKĘ `confirmJoin`
+  const confirmJoin = async () => {
+    if (!joinEventDetails || !token) return;
+
+    try {
+      // Krok A: Wyślij zapytanie do API, aby zapisać rezerwację w bazie
+      await bookingsApi.joinEvent(joinEventDetails.id, token);
+      
+      // Krok B: Zaktualizuj lokalny stan rezerwacji
       addBooking(joinEventDetails.id);
+      
+      // Krok C: Poinformuj EventsContext, aby odświeżył listę wydarzeń z serwera
+      await refetchEvents();
+
       setJoinOpen(false);
+      showToast("Dołączono do wydarzenia!");
+    } catch (error) {
+      showToast(`Błąd: ${error.message}`);
     }
   };
 

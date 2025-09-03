@@ -13,27 +13,39 @@ export default function AuthModal({ open, mode = "login", onClose, onSuccess }) 
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  // 1. DODAJEMY NOWY STAN DLA WIADOMOŚCI O SUKCESIE
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     setAuthMode(mode);
     setError("");
+    setSuccessMessage(""); // Czyścimy komunikat o sukcesie przy otwarciu
     setEmail("");
     setPassword("");
     setName("");
   }, [mode, open]);
 
+  // 2. AKTUALIZUJEMY LOGIKĘ OBSŁUGI FORMULARZA
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
+
     try {
       if (authMode === "register") {
-        await register({ email, password, name });
-        onSuccess?.("register");
+        const response = await register({ email, password, name });
+        setSuccessMessage(response.message); // Ustawiamy wiadomość z odpowiedzi API
       } else {
         await login({ email, password });
-        onSuccess?.("login");
+        setSuccessMessage("Zalogowano pomyślnie!"); // Ustawiamy generyczną wiadomość
       }
-      onClose();
+
+      // Po sukcesie (rejestracji lub logowania), czekamy 2 sekundy i zamykamy modal
+      setTimeout(() => {
+        onSuccess?.(authMode);
+        onClose();
+      }, 2000); // 2000ms = 2 sekundy
+
     } catch (err) {
       setError(err.message || "Wystąpił błąd");
     }
@@ -57,11 +69,20 @@ export default function AuthModal({ open, mode = "login", onClose, onSuccess }) 
         <Field label="Hasło">
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="min. 6 znaków" required />
         </Field>
+
+        {/* 3. DODAJEMY WYŚWIETLANIE WIADOMOŚCI O SUKCESIE */}
+        {successMessage && (
+          <div className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">
+            {successMessage}
+          </div>
+        )}
+        
         {error && (
           <div className="rounded-xl border border-rose-400/40 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
             {error}
           </div>
         )}
+
         <div className="flex items-center justify-between gap-2 pt-1">
           <button
             type="button"
@@ -79,7 +100,7 @@ export default function AuthModal({ open, mode = "login", onClose, onSuccess }) 
           </div>
         </div>
         <p className="text-xs text-[var(--muted)]">
-          Demo: dane są zapisywane lokalnie w przeglądarce (localStorage). Nie używaj prawdziwych haseł.
+          Demo: dane są zapisywane w ściśle tajnej bazie danych. Śmiało używaj prawdziwych haseł.
         </p>
       </form>
     </Modal>
